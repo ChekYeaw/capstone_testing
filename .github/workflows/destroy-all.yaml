@@ -28,6 +28,9 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+        
+      - name: Terraform destroy details
+        run: terraform plan -destroy
 
       - name: Force Destroy Everything
         run: terraform destroy -auto-approve || echo "Terraform destroy failed, please check manually."
