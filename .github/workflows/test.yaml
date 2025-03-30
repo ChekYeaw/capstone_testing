@@ -6,11 +6,11 @@ on:
       tfstate_key:
         description: "Select the Terraform state file to destroy"
         required: true
-        default: "tf-ce8_capstone_yyf_Nonprod.tfstate"
+        default: "tf-ce8_capstone_xinwei-nonprod.tfstate"
         type: choice
         options:
-          - "tf-ce8_capstone_yyf_prod.tfstate"
-          - "tf-ce8_capstone_yyf_Nonprod.tfstate"
+          - "tf-ce8_capstone_xinwei-nonprod.tfstate"
+          - "tf-ce8_capstone_xinwei-prod.tfstate"
 
 permissions:
   id-token: write
@@ -45,6 +45,8 @@ jobs:
 
       - name: List Terraform State Resources
         run: terraform state list || echo "No state file found"
+      - name: Plan Destroy 
+        run: terraform plan -destroy
 
-      - name: Destroy AWS Resources
-        run: terraform destroy -auto-approve
+#      - name: Destroy AWS Resources
+#        run: terraform destroy -auto-approve
