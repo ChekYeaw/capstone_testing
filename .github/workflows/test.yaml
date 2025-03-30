@@ -6,11 +6,11 @@ on:
       tfstate_key:
         description: "Select the Terraform state file to destroy"
         required: true
-        default: "tf-ce8_capstone_yyf_prod.tfstate"
+        default: "tf-ce8_capstone_yyf_Nonprod.tfstate"
         type: choice
         options:
           - "tf-ce8_capstone_yyf_prod.tfstate"
-          - "tf-ce8_capstone_yyf_nonprod.tfstate"
+          - "tf-ce8_capstone_yyf_Nonprod.tfstate"
 
 permissions:
   id-token: write
