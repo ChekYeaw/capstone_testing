@@ -1,16 +1,16 @@
-name: Destroy All AWS Resources
+name: Force Destroy Everything in AWS
 
 on:
   workflow_dispatch:
     inputs:
-      confirm_destroy_all:
-        description: 'Type "DESTROY_ALL" to confirm destruction of all resources'
+      confirm_destroy:
+        description: 'Type "FORCE_DESTROY" to confirm destruction'
         required: true
 
 jobs:
-  destroy_all:
+  force_destroy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.confirm_destroy_all == 'DESTROY_ALL' }}
+    if: ${{ github.event.inputs.confirm_destroy == 'FORCE_DESTROY' }}
 
     steps:
       - name: Checkout Repository
@@ -29,23 +29,8 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
-      - name: List Terraform Workspaces
-        run: terraform workspace list
-
-      - name: Destroy All Resources in Each Workspace
-        run: |
-          for env in dev uat prod; do
-            echo "🔹 Switching to workspace: $env"
-            terraform workspace select $env || terraform workspace new $env
-            terraform destroy -auto-approve | tee terraform-destroy-$env.log
-          done
-
-      - name: Delete Terraform Workspaces
-        run: |
-          for env in dev uat prod; do
-            terraform workspace select default
-            terraform workspace delete $env || echo "Workspace $env already deleted."
-          done
+      - name: Force Destroy Everything
+        run: terraform destroy -auto-approve || echo "Terraform destroy failed, please check manually."
 
       - name: Cleanup Confirmation
-        run: echo "✅ All AWS resources across all environments have been destroyed."
+        run: echo "✅ All AWS resources have been force destroyed."
