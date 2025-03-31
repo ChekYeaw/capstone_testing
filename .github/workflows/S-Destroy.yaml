@@ -6,11 +6,11 @@ on:
       tfstate_key:
         description: "Select Env to destroy"
         required: true
-        default: "NonProd"
+        default: "nonprod"
         type: choice
         options:
-          - "Prod"
-          - "NonProd"
+          - "prod"
+          - "nonprod"
 
 permissions:
   id-token: write
