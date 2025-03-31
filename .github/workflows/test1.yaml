@@ -37,5 +37,5 @@ jobs:
       - name: Plan Destroy 
         run: terraform -chdir=prod plan -destroy
 
-#      - name: Destroy AWS Resources
-#        run: terraform destroy -auto-approve
+      - name: Destroy AWS Resources
+        run: terraform -chdir=prod destroy -auto-approve
