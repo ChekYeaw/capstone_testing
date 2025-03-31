@@ -7,11 +7,11 @@ on:
       tfstate_key:
         description: "Select Env to Develo"
         required: true
-        default: "NonProd"
+        default: "nonprod"
         type: choice
         options:
-          - "Prod"
-          - "NonProd"
+          - "prod"
+          - "nonprod"
 
 #on:
 #  pull_request:
@@ -23,7 +23,7 @@ on:
 jobs:
   prod:
     runs-on: ubuntu-latest
-    environment: prod
+    environment: ${{ github.event.inputs.tfstate_key }}
     
     steps:
     - name: Checkout
