@@ -1,11 +1,11 @@
-name: Selection of Dev CI/CD Pipeline for Industrial IoT Application
+name: Select to Dev IoT Application
 
 on:
   workflow_dispatch:  # Manually trigger the workflow
 
     inputs:
       tfstate_key:
-        description: "Select Env to Develo"
+        description: "Select Env to Develop"
         required: true
         default: "nonprod"
         type: choice
