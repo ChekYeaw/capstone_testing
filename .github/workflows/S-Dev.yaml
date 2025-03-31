@@ -1,7 +1,17 @@
-name: CI/CD Pipeline for Industrial IoT Application
+name: Selection of Dev CI/CD Pipeline for Industrial IoT Application
 
 on:
   workflow_dispatch:  # Manually trigger the workflow
+
+    inputs:
+      tfstate_key:
+        description: "Select Env to Develo"
+        required: true
+        default: "NonProd"
+        type: choice
+        options:
+          - "Prod"
+          - "NonProd"
 
 #on:
 #  pull_request:
@@ -156,22 +166,22 @@ jobs:
       uses: hashicorp/setup-terraform@v2
 
     - name: Terraform Format
-      run: terraform fmt -recursive
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} fmt -recursive
 
     - name: Terraform fmt
-      run: terraform fmt -check
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} fmt -check
 
     - name: Terraform Init
-      run: terraform init
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} init
 
     - name: Terraform Validate
-      run: terraform validate
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} validate
 
     - name: Terraform Plan
-      run: terraform plan
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} plan
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: terraform -chdir=${{ github.event.inputs.tfstate_key }} apply -auto-approve
 
   #  - name: Terraform Destroy
   #    run: terraform destroy -auto-approve
