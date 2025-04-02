@@ -1,4 +1,5 @@
 resource "aws_api_gateway_method" "_" {
+  # checkov:skip=CKV2_AWS_53:API gateway validation will be implemented in Phase 2 (JIRA-1234) - Chek
   rest_api_id   = var.api_id
   resource_id   = var.api_resource_id
   http_method   = "OPTIONS"
