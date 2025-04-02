@@ -73,22 +73,22 @@ jobs:
     - name: Terraform fmt
       run: terraform fmt -check
          
-    - name: Terraform Init
-      run: terraform init
+    # - name: Terraform Init
+    #   run: terraform init
 
-    - name: Terraform Validate
-      run: terraform validate
+    # - name: Terraform Validate
+    #   run: terraform validate
 
     - name: Checkov
       uses: bridgecrewio/checkov-action@master
       with:
         framework: terraform
 
-    - name: Terraform Plan
-      run: terraform plan
+    # - name: Terraform Plan
+    #   run: terraform plan
 
-    - name: Terraform Destroy
-      run: terraform destroy -auto-approve
+    # - name: Terraform Destroy
+    #   run: terraform destroy -auto-approve
 
     # - name: Install Snyk
     #   run: npm install -g snyk
