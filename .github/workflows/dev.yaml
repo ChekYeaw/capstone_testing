@@ -32,7 +32,6 @@ jobs:
   Unit_Test:
     runs-on: ubuntu-latest
     needs: Build
-    environment: main
     
     steps:
     - name: Checkout
@@ -53,7 +52,6 @@ jobs:
   Basic_Integration_Test:
     runs-on: ubuntu-latest
     needs: Unit_Test
-    environment: main
     
     steps:
     - name: Checkout
