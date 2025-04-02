@@ -11,7 +11,7 @@ on:
 jobs:
   Build:
     runs-on: ubuntu-latest
-    environment: main
+    environment: prod
     
     steps:
     - name: Checkout
