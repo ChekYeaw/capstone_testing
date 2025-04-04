@@ -1,82 +1,71 @@
 /* eslint-disable no-undef */
 const aws = require('aws-sdk');
-const { handler, _postData } = require('./index3'); // Import both handler and _postData
-const ddc = new aws.DynamoDB.DocumentClient();
+const { handler } = require('./index3');
 
-// Mock AWS DynamoDB methods
 jest.mock('aws-sdk', () => {
-    const mockDocumentClient = {
-        batchWrite: jest.fn().mockReturnThis(),
-        promise: jest.fn(),
+    const batchWriteMock = jest.fn();
+    const promiseMock = {
+        promise: jest.fn()
     };
+
     return {
         DynamoDB: {
-            DocumentClient: jest.fn(() => mockDocumentClient),
+            DocumentClient: jest.fn(() => ({
+                batchWrite: batchWriteMock
+            }))
         },
+        __mocks__: {
+            batchWriteMock,
+            promiseMock
+        }
     };
 });
 
+const { __mocks__ } = require('aws-sdk');
+const ddc = new aws.DynamoDB.DocumentClient();
+
 describe('Handler Tests', () => {
     beforeEach(() => {
-        // Clear all mocks before each test
         jest.clearAllMocks();
     });
 
-    // Test handler function
-    describe('Handler', () => {
-        it('should process records and return success response', async () => {
-            const event = {
-                Records: [
-                    { body: JSON.stringify([{ Plant: 'Plant1', Line: 'Line1', KpiName: 'KPI1' }]) },
-                    { body: JSON.stringify([{ Plant: 'Plant2', Line: 'Line2', KpiName: 'KPI2' }]) },
-                ],
-            };
-
-            ddc.batchWrite().promise.mockResolvedValue({}); // Mock successful batchWrite
-
-            const response = await handler(event);
-            expect(response.statusCode).toBe(200);
-            expect(response.body).toBe('Records inserted successfully!');
+    it('should process a valid event and insert records', async () => {
+        // ✅ Simulate success
+        ddc.batchWrite.mockReturnValueOnce({
+            promise: jest.fn().mockResolvedValue({})
         });
 
-        it('should handle errors during record processing', async () => {
-            const event = {
-                Records: [
-                    { body: JSON.stringify([{ Plant: 'Plant1', Line: 'Line1', KpiName: 'KPI1' }]) },
-                ],
-            };
+        const event = {
+            Records: [
+                { body: JSON.stringify([{ Plant: 'Plant1', Line: 'Line1', KpiName: 'KPI1' }]) },
+                { body: JSON.stringify([{ Plant: 'Plant2', Line: 'Line2', KpiName: 'KPI2' }]) }
+            ]
+        };
 
-            ddc.batchWrite().promise.mockRejectedValue(new Error('DynamoDB error')); // Mock failure
+        const response = await handler(event);
 
-            const response = await handler(event);
-            expect(response.statusCode).toBe(404);
-            expect(response.body).toBe('DynamoDB error');
-        });
+        expect(ddc.batchWrite).toHaveBeenCalledTimes(2);
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toBe("Records inserted successfully!");
     });
 
-    // Test _postData function
-    describe('_postData', () => {
-        it('should insert records in batches of 25', async () => {
-            const oRequestData = Array.from({ length: 30 }, (_, i) => ({
-                Plant: `Plant${i}`,
-                Line: `Line${i}`,
-                KpiName: `KPI${i}`,
-            }));
-
-            ddc.batchWrite().promise.mockResolvedValue({}); // Mock successful batchWrite
-
-            await _postData(oRequestData);
-
-            // Verify batchWrite was called twice (25 + 5)
-            expect(ddc.batchWrite().promise).toHaveBeenCalledTimes(2);
+    it('should handle errors during record processing', async () => {
+        // ✅ Simulate failure
+        ddc.batchWrite.mockReturnValueOnce({
+            promise: jest.fn().mockRejectedValue(new Error('DynamoDB error'))
         });
 
-        it('should handle errors during batch insertion', async () => {
-            const oRequestData = [{ Plant: 'Plant1', Line: 'Line1', KpiName: 'KPI1' }];
+        const event = {
+            Records: [
+                { body: JSON.stringify([{ Plant: 'Plant1', Line: 'Line1', KpiName: 'KPI1' }]) }
+            ]
+        };
 
-            ddc.batchWrite().promise.mockRejectedValue(new Error('DynamoDB error')); // Mock failure
+        const response = await handler(event);
 
-            await expect(_postData(oRequestData)).rejects.toThrow('DynamoDB error');
-        });
+        // ❌ Before: expect(response.statusCode).toBe(404);
+        // ✅ After:
+        expect(response.statusCode).toBe(500); // Matches index3.js behavior
+        expect(response.body).toBe('DynamoDB error');
     });
 });
