@@ -1,20 +1,17 @@
-### File: shopFloorAlert.tf
-
 locals {
-  env           = "nonprod"                                      # Need to update prod or non-prod
-  name_prefix   = "grp3"                                          # Your base name prefix
-  env_suffix    = "-${local.env}"                                # always suffix the env 
-  email_address = "xinwei.cheng.88@gmail.com"                   # ✅ Email input included for Lambda SES
-}
+    env           = "nonprod"                                      # Need to update prod or non-prod
+    name_prefix   = "grp3" # your base name prefix
+    env_suffix    = "-${local.env}"                                # always suffix the env 
+  }
 
 ##SES##
 
 resource "aws_ses_email_identity" "source_alert_email" {
-  email = local.email_address  # ✅ use local
+  email = "xinwei.cheng.88@gmail.com"
 }
 
 resource "aws_ses_email_identity" "delivery_alert_email" {
-  email = local.email_address  # ✅ use local
+  email = "xinwei.cheng.88@gmail.com"
 }
 
 ## shopFloorAlert Lambda Execution Role ##
@@ -24,50 +21,47 @@ resource "aws_iam_policy" "shopFloorAlert_lambda_policy_lab1" {
   path        = "/"
   description = "Policy to be attached to lambda"
 
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
   policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
+    "Version" : "2012-10-17",
+    "Statement" : [
       {
-        Sid    = "VisualEditor0",
-        Effect = "Allow",
-        Action = [
-          "ses:SendEmail",
-          "ses:SendRawEmail",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
+        "Sid" : "VisualEditor0",
+        "Effect" : "Allow",
+        "Action" : [
+          "ses:*",
+          "logs:*",
           "dynamodb:DescribeStream",
           "dynamodb:GetRecords",
           "dynamodb:GetShardIterator",
           "dynamodb:ListStreams",
-          "kms:Decrypt"
+          "kms:Decrypt"   // ✅ Xinwei added this
         ],
-        Resource = [
-          aws_dynamodb_table.shop_floor_alerts.arn,
-          aws_kms_key.shop_floor_alerts_kms.arn,
-          "arn:aws:logs:*:*:*",
-          "arn:aws:ses:*:*:identity/${local.email_address}"
-        ]
+        "Resource" : "*"
       }
     ]
   })
 }
 
 resource "aws_iam_role" "shopFloorAlert_lambda_role_lab1" {
-  name = "shopFloorAlert_lambda_role_lab1${local.env_suffix}"       #local.env_suffix added
+  name = "shopFloorAlert_lambda_role_lab1${local.env_suffix}"       #local.env_suffix added  
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_role_policy_attachment" "shopFloorAlert_lambda_role_attach" {
@@ -83,28 +77,19 @@ data "archive_file" "lambdaalert" {
   output_path = "sendAlertEmail.zip"
 }
 
-resource "aws_sqs_queue" "dlq" { # ✅ DLQ for Lambda
-  name = "send_alert_email_dlq${local.env_suffix}"
-}
-
 resource "aws_lambda_function" "send_alert_email" {
   function_name = "SendAlertEmail${local.env_suffix}"               #local.env_suffix added
   role          = aws_iam_role.shopFloorAlert_lambda_role_lab1.arn
   runtime       = "nodejs16.x"
   filename      = "sendAlertEmail.zip"
-  handler       = "index1.handler"    # ✅ Xinwei updated index.handler to index1.handler
-  timeout       = 15
+  handler       = "index1.handler"    //✅ Xinwei updated index.handler to index1.handler
+  timeout       = "15"
 
   source_code_hash = data.archive_file.lambdaalert.output_base64sha256
-
-  tracing_config {
-    mode = "Active"    # tschui added to solve the severity issue detected by Snyk
-  }
-
-  reserved_concurrent_executions = 5  # ✅ Checkov CKV_AWS_115
-
-  dead_letter_config {
-    target_arn = aws_sqs_queue.dlq.arn  # ✅ Checkov CKV_AWS_116
+  
+  # Enable X-Ray tracing
+  tracing_config { # tschui added to solve the severity issue detected by Snyk
+    mode = "Active"
   }
 }
 
@@ -136,8 +121,9 @@ resource "aws_dynamodb_table" "shop_floor_alerts" {
 
   point_in_time_recovery { # tschui added to solve the severity issue detected by Snyk
     enabled = true         # Enable Point-in-Time Recovery (PITR)
-  }
+  }  
 
+  # Enable server-side encryption with customer-managed KMS key
   server_side_encryption { # tschui added to solve the severity issue detected by Snyk
     enabled     = true
     kms_key_arn = aws_kms_key.shop_floor_alerts_kms.arn
@@ -151,10 +137,12 @@ resource "null_resource" "delay" {
 }
 
 resource "aws_lambda_event_source_mapping" "trigger" {
+
   batch_size        = 100
   event_source_arn  = aws_dynamodb_table.shop_floor_alerts.stream_arn
   function_name     = aws_lambda_function.send_alert_email.arn
   starting_position = "LATEST"
 
-  depends_on = [null_resource.delay]
+ depends_on = [null_resource.delay]
+ 
 }
