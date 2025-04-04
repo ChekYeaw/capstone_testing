@@ -36,6 +36,7 @@ resource "aws_iam_policy" "shopFloorAlert_lambda_policy_lab1" {
           "dynamodb:GetRecords",
           "dynamodb:GetShardIterator",
           "dynamodb:ListStreams",
+          "kms:Decrypt"   // ✅ Xinwei added this
         ],
         "Resource" : "*"
       }
@@ -81,7 +82,7 @@ resource "aws_lambda_function" "send_alert_email" {
   role          = aws_iam_role.shopFloorAlert_lambda_role_lab1.arn
   runtime       = "nodejs16.x"
   filename      = "sendAlertEmail.zip"
-  handler       = "index.handler"
+  handler       = "index1.handler"    ✅ Xinwei updated index.handler to index2.handler
   timeout       = "15"
 
   source_code_hash = data.archive_file.lambdaalert.output_base64sha256
