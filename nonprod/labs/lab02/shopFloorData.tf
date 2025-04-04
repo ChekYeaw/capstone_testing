@@ -1,8 +1,8 @@
 locals {
-    env           = "nonprod"                                      # Need to update prod or non-prod
-    name_prefix   = "grp3" # your base name prefix
-    env_suffix    = "-${local.env}"                                # always suffix the env
-  }
+  env           = "nonprod"                                      # Need to update prod or non-prod
+  name_prefix   = "grp3"                                       # your base name prefix
+  env_suffix    = "-${local.env}"                              # always suffix the env
+}
 
 ## shopFloorData Lambda Execution Role ##
 
@@ -20,10 +20,20 @@ resource "aws_iam_policy" "shopFloorData_lambda_policy_lab2" {
         "Sid" : "VisualEditor0",
         "Effect" : "Allow",
         "Action" : [
-          "logs:*",
-          "dynamodb:*"
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
         ],
-        "Resource" : "*"
+        "Resource" : [
+          "arn:aws:logs:*:*:*",
+          "arn:aws:dynamodb:*:*:table/shop_floor_alerts${local.env_suffix}"
+        ]
       }
     ]
   })
@@ -54,12 +64,16 @@ resource "aws_iam_role_policy_attachment" "shopFloorData_lambda_role_attach" {
   policy_arn = aws_iam_policy.shopFloorData_lambda_policy_lab2.arn
 }
 
-## shopFloorData Lambda Fucntion ##
+## shopFloorData Lambda Function ##
 
 data "archive_file" "lambdadata" {
   type        = "zip"
   source_file = "${path.module}/lambdaData/shopFloorData/index2.js"
   output_path = "shopFloorData.zip"
+}
+
+resource "aws_sqs_queue" "shopFloorData_dlq" { # ✅ Add DLQ for Lambda (Checkov CKV_AWS_116)
+  name = "shop_floor_data_dlq${local.env_suffix}"
 }
 
 resource "aws_lambda_function" "shopFloorData_txnService" {
@@ -68,13 +82,19 @@ resource "aws_lambda_function" "shopFloorData_txnService" {
   runtime       = "nodejs16.x"
   filename      = "shopFloorData.zip"
   handler       = "index2.handler"                                         # ✅ Xinwei change index.handler to index2.handler
-  timeout       = "15"
+  timeout       = 15
 
   source_code_hash = data.archive_file.lambdadata.output_base64sha256
 
   # Enable X-Ray tracing
   tracing_config { # tschui added to solve the severity issue detected by Snyk
     mode = "Active"
+  }
+
+  reserved_concurrent_executions = 5 # ✅ Limit concurrency (Checkov CKV_AWS_115)
+
+  dead_letter_config { # ✅ Add DLQ configuration (Checkov CKV_AWS_116)
+    target_arn = aws_sqs_queue.shopFloorData_dlq.arn
   }
 }
 
@@ -107,11 +127,6 @@ resource "aws_api_gateway_method_response" "post_shopFloor_data_response_200" {
   http_method = aws_api_gateway_method.post_shopFloor_data.http_method
   status_code = 200
 
-  /**
-   * This is where the configuration for CORS enabling starts.
-   * We need to enable those response parameters and in the 
-   * integration response we will map those to actual values
-   */
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = true,
     "method.response.header.Access-Control-Allow-Methods"     = true,
@@ -149,11 +164,6 @@ resource "aws_api_gateway_method_response" "get_shopFloor_data_response_200" {
   http_method = aws_api_gateway_method.get_shopFloor_data.http_method
   status_code = 200
 
-  /**
-   * This is where the configuration for CORS enabling starts.
-   * We need to enable those response parameters and in the 
-   * integration response we will map those to actual values
-   */
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = true,
     "method.response.header.Access-Control-Allow-Methods"     = true,
@@ -178,7 +188,7 @@ resource "aws_api_gateway_method" "delete_shopFloor_data" {
   resource_id   = aws_api_gateway_resource.shopFloor_resource.id
   http_method   = "DELETE"
   #authorization = "NONE"
-  authorization = "AWS_IAM" # tschui changed to solve the severity issue detected by Snyk 
+  authorization = "AWS_IAM" # tschui changed to solve the severity issue detected by Snyk
   request_parameters = {
     "method.request.querystring.Plant"   = true,
     "method.request.querystring.Line"    = true,
@@ -192,11 +202,6 @@ resource "aws_api_gateway_method_response" "delete_shopFloor_data_response_200" 
   http_method = aws_api_gateway_method.delete_shopFloor_data.http_method
   status_code = 200
 
-  /**
-   * This is where the configuration for CORS enabling starts.
-   * We need to enable those response parameters and in the 
-   * integration response we will map those to actual values
-   */
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers"     = true,
     "method.response.header.Access-Control-Allow-Methods"     = true,
@@ -213,7 +218,6 @@ resource "aws_api_gateway_integration" "integration_delete_shopFloor_data" {
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.shopFloorData_txnService.invoke_arn
 }
-
 
 ## shopFloorData Lambda Function ##
 
@@ -237,7 +241,6 @@ resource "aws_api_gateway_deployment" "shopFloorData_api_deploy" {
   rest_api_id = aws_api_gateway_rest_api.shopFloor_api_gw.id
   triggers = {
     redeployment = sha1(jsonencode([
-
       aws_api_gateway_resource.shopFloor_resource,
       aws_api_gateway_method.post_shopFloor_data,
       aws_api_gateway_integration.integration_post_shopFloor_data,
@@ -262,7 +265,7 @@ resource "aws_api_gateway_stage" "stage-andon-api" {
   rest_api_id   = aws_api_gateway_rest_api.shopFloor_api_gw.id
   stage_name    = "dev"
 
-   # Enabling X-Ray tracing
+  # Enabling X-Ray tracing
   xray_tracing_enabled = true # tschui added to solve the severity issue detected by Snyk
 
   # Enabling Access Logging
@@ -271,4 +274,3 @@ resource "aws_api_gateway_stage" "stage-andon-api" {
     format          = "$context.requestId - $context.identity.sourceIp - $context.identity.userAgent - $context.requestTime - $context.status"
   }
 }
-
