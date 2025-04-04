@@ -1,12 +1,12 @@
 name: IIoT CICD Pipeline
 
-# on:
-#   workflow_dispatch:  # Manually trigger the workflow
-
 on:
- pull_request:
-   branches:
-     - main
+  workflow_dispatch:  # Manually trigger the workflow
+
+# on:
+#  pull_request:
+#    branches:
+#      - main
 
 jobs:
   Build:
