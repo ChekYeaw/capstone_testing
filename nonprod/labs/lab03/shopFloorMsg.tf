@@ -17,8 +17,8 @@ resource "aws_iot_policy" "pubsub" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["iot:*"],
-        Effect = "Allow",
+        Action = ["iot:*"]
+        Effect = "Allow"
         Resource = "*"
       }
     ]
@@ -51,8 +51,8 @@ resource "aws_sqs_queue" "shop_floor_data_queue" {
   kms_master_key_id         = aws_kms_key.msg_queue_kms.arn  # ✅ Encrypt messages with CMK (CKV2_AWS_73)
 }
 
-resource "aws_iot_policy" "iot_policy" {
-  name = "iot_policy${local.env_suffix}"       #local.env_suffix added
+resource "aws_iam_policy" "iot_policy" {
+  name = "iot_policy${local.env_suffix}"
   path = "/"
 
   policy = jsonencode({
@@ -88,7 +88,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "iot_role_attach" {
   role       = aws_iam_role.iot_role.name
-  policy_arn = aws_iot_policy.iot_policy.arn
+  policy_arn = aws_iam_policy.iot_policy.arn
 }
 
 resource "aws_iot_topic_rule" "push_to_sqs" {
