@@ -5,8 +5,10 @@ name: CI/CD Pipeline for Industrial IoT Application
 
 on:
  pull_request:
-   branches:
-     - main
+#   branches:
+#     - main
+    paths:
+      - 'prod/**'  # Trigger on changes in the 'prod' directory
 
 jobs:
   Build:
