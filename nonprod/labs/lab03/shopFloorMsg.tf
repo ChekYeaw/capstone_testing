@@ -112,7 +112,8 @@ resource "aws_iam_policy" "lambda_policy" {
         "Action" : [
           "sqs:*",
           "logs:*",
-          "dynamodb:*"
+          "dynamodb:*",
+          "kms:Decrypt"             # ✅ Xinwei Add this line
         ],
         "Resource" : "*"
       }
@@ -157,7 +158,7 @@ resource "aws_lambda_function" "processShopFloorMsgs" {
   role          = aws_iam_role.lambda_role.arn
   runtime       = "nodejs16.x"
   filename      = "processShopFloorMsgs.zip"
-  handler       = "index.handler"
+  handler       = "index3.handler"                                         # ✅ Xinwei change index.handler to index3.handler
   timeout       = "15"
 
   source_code_hash = data.archive_file.lambda.output_base64sha256
