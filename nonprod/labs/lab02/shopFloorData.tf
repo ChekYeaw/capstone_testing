@@ -11,15 +11,13 @@ resource "aws_iam_policy" "shopFloorData_lambda_policy_lab2" {
   path        = "/"
   description = "Policy to be attached to ShopFloorData_TxnService lambda"
 
-  # Terraform's "jsonencode" function converts a
-  # Terraform expression result to valid JSON syntax.
   policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
+    "Version": "2012-10-17",
+    "Statement": [
       {
-        "Sid" : "VisualEditor0",
-        "Effect" : "Allow",
-        "Action" : [
+        "Sid": "VisualEditor0",
+        "Effect": "Allow",
+        "Action": [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
@@ -30,7 +28,7 @@ resource "aws_iam_policy" "shopFloorData_lambda_policy_lab2" {
           "dynamodb:Scan",
           "dynamodb:Query"
         ],
-        "Resource" : [
+        "Resource": [
           "arn:aws:logs:*:*:*",
           "arn:aws:dynamodb:*:*:table/shop_floor_alerts${local.env_suffix}"
         ]
@@ -73,7 +71,8 @@ data "archive_file" "lambdadata" {
 }
 
 resource "aws_sqs_queue" "shopFloorData_dlq" { # ✅ Add DLQ for Lambda (Checkov CKV_AWS_116)
-  name = "shop_floor_data_dlq${local.env_suffix}"
+  name              = "shop_floor_data_dlq${local.env_suffix}"
+  kms_master_key_id = "alias/aws/sqs" # ✅ Encrypt DLQ (CKV_AWS_27)
 }
 
 resource "aws_lambda_function" "shopFloorData_txnService" {
@@ -103,6 +102,9 @@ resource "aws_lambda_function" "shopFloorData_txnService" {
 resource "aws_api_gateway_rest_api" "shopFloor_api_gw" {
   name        = "shopFloor_api_gw${local.env_suffix}"
   description = "REST API to CRUD Shop Floor Data"
+  lifecycle {
+    create_before_destroy = true # ✅ CKV_AWS_237
+  }
 }
 
 resource "aws_api_gateway_resource" "shopFloor_resource" {
@@ -117,7 +119,6 @@ resource "aws_api_gateway_method" "post_shopFloor_data" {
   rest_api_id   = aws_api_gateway_rest_api.shopFloor_api_gw.id
   resource_id   = aws_api_gateway_resource.shopFloor_resource.id
   http_method   = "POST"
-  #authorization = "NONE"
   authorization = "AWS_IAM" # tschui changed to solve the severity issue detected by Snyk
 }
 
@@ -150,8 +151,7 @@ resource "aws_api_gateway_method" "get_shopFloor_data" {
   rest_api_id   = aws_api_gateway_rest_api.shopFloor_api_gw.id
   resource_id   = aws_api_gateway_resource.shopFloor_resource.id
   http_method   = "GET"
-  #authorization = "NONE"
-  authorization = "AWS_IAM" # tschui changed to solve the severity issue detected by Snyk
+  authorization = "AWS_IAM"
   request_parameters = {
     "method.request.querystring.Plant" = true,
     "method.request.querystring.Line"  = true
@@ -187,8 +187,7 @@ resource "aws_api_gateway_method" "delete_shopFloor_data" {
   rest_api_id   = aws_api_gateway_rest_api.shopFloor_api_gw.id
   resource_id   = aws_api_gateway_resource.shopFloor_resource.id
   http_method   = "DELETE"
-  #authorization = "NONE"
-  authorization = "AWS_IAM" # tschui changed to solve the severity issue detected by Snyk
+  authorization = "AWS_IAM"
   request_parameters = {
     "method.request.querystring.Plant"   = true,
     "method.request.querystring.Line"    = true,
@@ -255,9 +254,10 @@ resource "aws_api_gateway_deployment" "shopFloorData_api_deploy" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "api_gateway_logs" { // tschui added to solve the severity issue detected by Snyk
-  name              =  "/aws/api/gateway/logs${local.env_suffix}"          #local.env_suffix added
-  retention_in_days = 30
+resource "aws_cloudwatch_log_group" "api_gateway_logs" { # tschui added to solve the severity issue detected by Snyk
+  name              = "/aws/api/gateway/logs${local.env_suffix}"
+  retention_in_days = 400 # ✅ Fix for CKV_AWS_338
+  kms_key_id        = "alias/aws/logs" # ✅ Fix for CKV_AWS_158
 }
 
 resource "aws_api_gateway_stage" "stage-andon-api" {
@@ -265,10 +265,8 @@ resource "aws_api_gateway_stage" "stage-andon-api" {
   rest_api_id   = aws_api_gateway_rest_api.shopFloor_api_gw.id
   stage_name    = "dev"
 
-  # Enabling X-Ray tracing
   xray_tracing_enabled = true # tschui added to solve the severity issue detected by Snyk
 
-  # Enabling Access Logging
   access_log_settings { # tschui added to solve the severity issue detected by Snyk
     destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
     format          = "$context.requestId - $context.identity.sourceIp - $context.identity.userAgent - $context.requestTime - $context.status"
