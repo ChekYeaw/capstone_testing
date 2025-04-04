@@ -67,8 +67,7 @@ resource "aws_lambda_function" "shopFloorData_txnService" {
   role          = aws_iam_role.shopFloorData_lambda_role_lab2.arn
   runtime       = "nodejs16.x"
   filename      = "shopFloorData.zip"
-  handler       = "index2.handler"  //✅ Xinwei updated index.handler to index2.handler
-  timeout       = "15"
+  handler       = "index2.handler"                                         # ✅ Xinwei change index.handler to index2.handler
   timeout       = "15"
 
   source_code_hash = data.archive_file.lambdadata.output_base64sha256
