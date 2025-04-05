@@ -21,7 +21,8 @@ resource "aws_iam_policy" "shopFloorData_lambda_policy_lab2" {
         "Effect" : "Allow",
         "Action" : [
           "logs:*",
-          "dynamodb:*"
+          "dynamodb:*",
+          "kms:Decrypt"             # ✅ Xinwei Add this line
         ],
         "Resource" : "*"
       }
