@@ -158,7 +158,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform -chdir=nonprod init
         
       - name: Terraform Apply
-        run: terraform apply -target=module.lab01-nonprod -target=module.lab02-nonprod -target=module.lab03-nonprod --auto-approve        
+        run: terraform -chdir=nonprod apply -target=module.lab01-nonprod -target=module.lab02-nonprod -target=module.lab03-nonprod --auto-approve        
