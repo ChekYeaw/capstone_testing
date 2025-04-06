@@ -42,7 +42,7 @@ describe('SES Email Sending', () => {
         expect(aws.SES().sendEmail).toHaveBeenCalled();
         expect(aws.SES().sendEmail).toHaveBeenCalledWith(expect.objectContaining({
             Destination: {
-                ToAddresses: ["xinwei.cheng.88@gmail.com"] // ✅ fixed recipient
+                ToAddresses: ["harris_ita@yahoo.com.sg"] // ✅ fixed recipient
             },
             Message: {
                 Body: {
@@ -56,7 +56,7 @@ describe('SES Email Sending', () => {
                     Data: "KPI Alert"
                 }
             },
-            Source: "xinwei.cheng.88@gmail.com" // ✅ fixed sender
+            Source: "harris_ita03@hotmail.com" // ✅ fixed sender
         }));
     });
 
