@@ -29,7 +29,7 @@ describe('SES Email Sending', () => {
                             Plant: { S: 'Plant1' },
                             Line: { S: 'Line1' },
                             KpiValue: { N: '110' },
-                            Threshold: { N: '100' }, // ✅ updated key
+                            ThresholdValue: { N: '100' }, // ✅ updated key
                             KpiName: { S: 'Production Rate' }
                         }
                     }
@@ -70,7 +70,7 @@ describe('SES Email Sending', () => {
                             Plant: { S: 'Plant1' },
                             Line: { S: 'Line1' },
                             KpiValue: { N: '90' },
-                            Threshold: { N: '100' }, // ✅ updated key
+                            ThresholdValue: { N: '100' }, // ✅ updated key
                             KpiName: { S: 'Production Rate' }
                         }
                     }
