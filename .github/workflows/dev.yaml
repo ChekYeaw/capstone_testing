@@ -5,10 +5,10 @@ name: CI/CD Pipeline for Industrial IoT Application
 
 on:
  pull_request:
-#   branches:
-#     - main
-    paths:
-      - 'prod/**'  # Trigger on changes in the 'prod' directory
+  branches:
+    - main
+      #paths:
+      #- 'prod/**'  # Trigger on changes in the 'prod' directory
 
 jobs:
   Build:
@@ -76,66 +76,10 @@ jobs:
       uses: hashicorp/setup-terraform@v2
 
     - name: Terraform Format
-      run: terraform -chdir=prod  fmt -recursive
+      run: terraform fmt -recursive
 
     - name: Terraform fmt
-      run: terraform -chdir=prod  fmt -check
-
-    # - name: Terraform Init
-    #   run: terraform init
-
-    # - name: Terraform Validate
-    #   run: terraform validate
-
-    # - name: Start LocalStack
-    #   uses: LocalStack/setup-localstack@v0.2.2
-    #   with:
-    #     image-tag: 'latest'
-    #     install-awslocal: 'true'
-          
-
-    # - name: Wait for LocalStack to be ready
-    #   run: |
-    #         echo "Waiting for LocalStack to be ready..."
-    #         while ! curl -s http://localhost:4566/_localstack/ready; do
-    #           echo "LocalStack not ready yet, retrying in 5 seconds..."
-    #           sleep 5
-    #         done
-    #         echo "LocalStack is ready!" 
-
-    # - name: Terraform Plan
-    #   run: terraform plan
-
-    # - name: Reset LocalStack state
-    #   run: |
-    #     curl -X POST http://localhost:4566/_localstack/reset
-
-    # - name: Terraform State List
-    #   run: terraform state list
-
-    # - name: Terraform Destory 
-    #   run: terraform destroy -auto-approve
-
-    # - name: Run Terraform Apply (LocalStack)
-    #   env:
-    #        USE_LOCALSTACK: "true"
-    #   run: |
-    #       terraform apply -target=module.lab02 -auto-approve
-
-    # - name: Terraform Destroy
-    #   run: terraform destroy -auto-approve
-
-  #  - name: Terraform State
-  #    run: terraform state rm module.lab01.aws_ses_email_identity.delivery_alert_email
-
-  #  - name: Terraform State
-  #    run: terraform state rm module.lab01.aws_ses_email_identity.source_alert_email
-
-  #  - name: Destroy Delivery Email
-  #    run: terraform destroy -target=module.lab01.aws_ses_email_identity.delivery_alert_email
-
-  #  - name: Destroy Source Email
-  #    run: terraform destroy -target=module.lab01.aws_ses_email_identity.source_alert_email
+      run: terraform fmt -check
 
   Vulnerability_Test:
     needs: Basic_Integration_Test
@@ -185,22 +129,14 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Terraform Format
-        run: terraform fmt -recursive
-
       - name: Terraform Init
-        run: terraform -chdir=prod init
+        run: terraform init
 
       - name: Terraform Validate
-        run: terraform -chdir=prod validate
+        run: terraform validate
 
       - name: Terraform Plan
-        run: terraform -chdir=prod plan
-
-      # - name: Wait for manual approval
-      #   run: |
-      #     echo "Waiting for manual approval before applying Terraform changes."
-      #   timeout-minutes: 5  # Optional, how long to wait before timing out
+        run: terraform plan
 
   Deployment:
     needs: Review
@@ -222,7 +158,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
-        run: terraform -chdir=prod init
+        run: terraform init
         
       - name: Terraform Apply
-        run: terraform -chdir=prod apply -auto-approve
+        run: terraform apply -target=module.lab01-nonprod -target=module.lab02-nonprod -target=module.lab03-nonprod --auto-approve        

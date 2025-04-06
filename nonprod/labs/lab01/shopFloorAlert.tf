@@ -7,11 +7,11 @@ locals {
 ##SES##
 
 resource "aws_ses_email_identity" "source_alert_email" {
-  email = "xinwei.cheng.88@gmail.com"
+  email = "harris_ita03@hotmail.com"
 }
 
 resource "aws_ses_email_identity" "delivery_alert_email" {
-  email = "xinwei.cheng.88@gmail.com"
+  email = "harris_ita@yahoo.com.sg"
 }
 
 ## shopFloorAlert Lambda Execution Role ##

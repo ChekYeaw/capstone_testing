@@ -29,7 +29,7 @@ describe('SES Email Sending', () => {
                             Plant: { S: 'Plant1' },
                             Line: { S: 'Line1' },
                             KpiValue: { N: '110' },
-                            Threshold: { N: '100' }, // ✅ updated key
+                            ThresholdValue: { N: '100' }, // ✅ updated key
                             KpiName: { S: 'Production Rate' }
                         }
                     }
@@ -42,7 +42,7 @@ describe('SES Email Sending', () => {
         expect(aws.SES().sendEmail).toHaveBeenCalled();
         expect(aws.SES().sendEmail).toHaveBeenCalledWith(expect.objectContaining({
             Destination: {
-                ToAddresses: ["xinwei.cheng.88@gmail.com"] // ✅ fixed recipient
+                ToAddresses: ["harris_ita@yahoo.com.sg"] // ✅ fixed recipient
             },
             Message: {
                 Body: {
@@ -56,7 +56,7 @@ describe('SES Email Sending', () => {
                     Data: "KPI Alert"
                 }
             },
-            Source: "xinwei.cheng.88@gmail.com" // ✅ fixed sender
+            Source: "harris_ita03@hotmail.com" // ✅ fixed sender
         }));
     });
 
@@ -70,7 +70,7 @@ describe('SES Email Sending', () => {
                             Plant: { S: 'Plant1' },
                             Line: { S: 'Line1' },
                             KpiValue: { N: '90' },
-                            Threshold: { N: '100' }, // ✅ updated key
+                            ThresholdValue: { N: '100' }, // ✅ updated key
                             KpiName: { S: 'Production Rate' }
                         }
                     }

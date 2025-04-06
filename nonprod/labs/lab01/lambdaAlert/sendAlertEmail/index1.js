@@ -7,7 +7,7 @@ const ses = new aws.SES();
 const oParams = {
     Destination: {
         ToAddresses: [
-            "xinwei.cheng.88@gmail.com" // ✅ Update/add verified SES recipients here
+            "harris_ita@yahoo.com.sg" // ✅ Update/add verified SES recipients here
         ]
     },
     Message: {
@@ -22,7 +22,7 @@ const oParams = {
             Data: "KPI Alert"
         }
     },
-    Source: "xinwei.cheng.88@gmail.com" // ✅ This must be verified in SES
+    Source: "harris_ita03@hotmail.com" // ✅ This must be verified in SES
 };
 
 exports.handler = async (event) => {
@@ -39,7 +39,7 @@ exports.handler = async (event) => {
         const line = image?.Line?.S || 'UnknownLine';
         const kpiName = image?.KpiName?.S || 'UnknownKPI';
         const actualValue = parseInt(image?.KpiValue?.N || '0');
-        const thresholdValue = parseInt(image?.Threshold?.N || '0'); // ✅ Match DynamoDB attribute name
+        const thresholdValue = parseInt(image?.ThresholdValue?.N || '0'); // ✅ Match DynamoDB attribute name
 
         // ✅ Only send email when KPI exceeds the threshold
         if (actualValue > thresholdValue) {
