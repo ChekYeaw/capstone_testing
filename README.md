@@ -2,7 +2,9 @@
 
 ## Overview
 
+
 ![Overview picture](overview.jpg)
+
 This architecture implements a comprehensive factory monitoring system using AWS serverless technologies to collect, process, store, and analyse plant floor data from IoT devices. The system provides real-time monitoring, alerting when KPIs exceed thresholds, and CRUD operations for data management.
 
 ## Architecture Components
