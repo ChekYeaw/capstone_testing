@@ -36,6 +36,14 @@ This architecture implements a comprehensive factory monitoring system using AWS
    - Postman used for testing CRUD operations 
 (Node 2)
 
+5. **API Access**:
+   - API Gateway exposes microservices to external clients 
+(Nodes 10)
+   - Lamba functions handle CRUD operations 
+(Nodes 21)
+   - Postman used for testing CRUD operations 
+(Node 2)
+
 ## GitHub Branching & Deployment Strategy
 
 This repository uses a streamlined strategy with two branches and two environment folders to manage feature development, testing, and production releases.
