@@ -29,12 +29,9 @@ This architecture implements a comprehensive factory monitoring system using AWS
 (Nodes 7)
 
 4. **Alerting**
-   - API Gateway exposes microservices to external clients 
-(Nodes 10)
-   - Lambda functions handle CRUD operations 
-(Nodes 21)
-   - Postman used for testing CRUD operations 
-(Node 2)
+   - Lambda functions monitor DynamoDB streams for threshold violations (Nodes 8)
+   - SES sends email notifications when alerts are triggered 
+(Nodes 9)
 
 5. **API Access**:
    - API Gateway exposes microservices to external clients 
