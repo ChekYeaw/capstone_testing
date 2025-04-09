@@ -88,7 +88,7 @@ Traffic route to Prod before next development.
 
 This CI/CD pipeline automates the build, test, security scanning, and deployment of the AWS IoT Factory Monitoring System. The pipeline is implemented using GitHub Actions and includes five main stages: Build, Unit Testing, and Basic Integration Testing, Vulnerability Test, Review and Deployment.
 
-1. Build Stage
+1. **Build Stage**
    - **Environment**: Runs on ubuntu-latest in the prod environment
    - **Steps**:
        - Checks out the repository code
@@ -96,7 +96,7 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
        - Installs project dependencies using npm install
        - Runs code linting with npm run lint
 
-2. Unit Test Stage
+2. **Unit Test Stage**
     - **Dependency**: Requires successful completion of Build stage
     - **Environment**: Runs on ubuntu-latest
     - **Steps**:
@@ -105,7 +105,7 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
       - Installs dependencies
       - Executes unit tests using Jest (npm run test)
 
-3. Basic Integration Test Stage
+3. **Basic Integration Test Stage**
    - **Dependency**: Requires successful completion of Unit Test stage
    - **Environment**: Runs on ubuntu-latest
    - **Steps**:
@@ -115,7 +115,7 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
        - Sets up Terraform environment
        - Runs Terraform format validation (terraform fmt -check)
   
-4. Vulnerability Test Stage
+4. **Vulnerability Test Stage**
    - **Dependency**: Requires successful completion of Basic Integration Test stage
    - **Environment**: Runs on ubuntu-latest
    - **Steps**:
@@ -124,7 +124,7 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
       - Run Snyk tests on the code and Infrastructure as Code (IaC) to detect vulnerabilities.
       - Snyk may report issues (e.g., "SNYK-CC-AWS-415"), which can be ignored based on your security policies.
 
-5. Review Test Stage
+5. **Review Test Stage**
     - **Dependency**: Requires successful completion of Vulnerability Test stage
     - **Environment**: Runs on ubuntu-latest
     - **Steps**:
@@ -133,7 +133,7 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
         - Validate Terraform configurations using terraform validate.
         - Plan the infrastructure changes that will be deployed.
 
-6. Deployment Test Stage
+6. **Deployment Test Stage**
     - **Dependency**: Requires successful completion of Review Test stage
     - **Environment**: Runs on ubuntu-latest
     - **Steps**:
@@ -141,6 +141,3 @@ This CI/CD pipeline automates the build, test, security scanning, and deployment
         - Checkout the repository.
         - Set up AWS credentials for deployment.
         - Initialize Terraform and apply the configurations to provision resources.
-
-
-
