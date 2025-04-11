@@ -1,18 +1,20 @@
-const aws = require('aws-sdk')
+const aws = require('aws-sdk');
 
+// Initialize AWS SES client
+const ses = new aws.SES();
 
+// Pre-defined email message template
 const oParams = {
-    Destination: { /* required */
+    Destination: {
         ToAddresses: [
-            "chekyeaw+ce8@gmail.com",
-            /* more items */
+            "harris_ita@yahoo.com.sg" // ✅ Update/add verified SES recipients here
         ]
     },
-    Message: { /* required */
-        Body: { /* required */
+    Message: {
+        Body: {
             Text: {
                 Charset: "UTF-8",
-                Data: ""
+                Data: "" // This gets filled dynamically
             }
         },
         Subject: {
@@ -20,35 +22,39 @@ const oParams = {
             Data: "KPI Alert"
         }
     },
-    Source: "chekyeaw@gmail.com", /* required */
-}
-
-const ses = new aws.SES()
+    Source: "harris_ita03@hotmail.com" // ✅ This must be verified in SES
+};
 
 exports.handler = async (event) => {
-    console.log(JSON.stringify(event))
+    console.log("Incoming event:", JSON.stringify(event, null, 2)); // Helpful debug logging
 
     for (let item of event.Records) {
+        // Skip DELETE operations
+        if (item.eventName === 'REMOVE') continue;
 
-        if (item.eventName === 'REMOVE') return
+        const image = item.dynamodb.NewImage;
 
-        /**********************Parsing the params from event object*******************/
-        const plant = item.dynamodb.NewImage.Plant['S']
-        const line = item.dynamodb.NewImage.Line['S']
-        const actualValue = parseInt(item.dynamodb.NewImage.KpiValue['N'])
-        const thresholdValue = parseInt(item.dynamodb.NewImage.ThresholdValue['N'])
-        const kpiName = item.dynamodb.NewImage.KpiName['S']
-        /*****************************************************************************/
+        // ✅ Safely extract values using optional chaining and default values
+        const plant = image?.Plant?.S || 'UnknownPlant';
+        const line = image?.Line?.S || 'UnknownLine';
+        const kpiName = image?.KpiName?.S || 'UnknownKPI';
+        const actualValue = parseInt(image?.KpiValue?.N || '0');
+        const thresholdValue = parseInt(image?.ThresholdValue?.N || '0'); // ✅ Match DynamoDB attribute name
 
+        // ✅ Only send email when KPI exceeds the threshold
         if (actualValue > thresholdValue) {
             try {
-                const msgBody = `${kpiName} has exceeded the threshold value ${thresholdValue} by ${actualValue - thresholdValue} units for plant ${plant} and line ${line}`
+                const msgBody = `${kpiName} has exceeded the threshold (${thresholdValue}) by ${actualValue - thresholdValue} units in ${plant}, Line ${line}`;
 
-                oParams.Message.Body.Text['Data'] = msgBody
-                await ses.sendEmail(oParams).promise()
+                // Fill in the dynamic message
+                oParams.Message.Body.Text.Data = msgBody;
+
+                console.log("Sending email with message:", msgBody);
+                await ses.sendEmail(oParams).promise();
             } catch (error) {
-                return error.message
+                console.error("❌ Failed to send email:", error);
+                return error.message;
             }
         }
     }
-}
+};
