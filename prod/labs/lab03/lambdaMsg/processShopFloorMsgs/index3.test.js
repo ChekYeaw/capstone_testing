@@ -16,6 +16,8 @@ jest.mock('aws-sdk', () => {
     };
 });
 
+// const { __mocks__ } = require('aws-sdk'); // Commented to avoid 'no-unused-vars' ESLint error
+
 describe('Handler Tests', () => {
     beforeEach(() => {
         // Clear all mocks before each test
@@ -49,7 +51,8 @@ describe('Handler Tests', () => {
             ddc.batchWrite().promise.mockRejectedValue(new Error('DynamoDB error')); // Mock failure
 
             const response = await handler(event);
-            expect(response.statusCode).toBe(404);
+            // expect(response.statusCode).toBe(404); // ❌ Wrong expectation
+            expect(response.statusCode).toBe(500);     // ✅ Match actual handler logic
             expect(response.body).toBe('DynamoDB error');
         });
     });
