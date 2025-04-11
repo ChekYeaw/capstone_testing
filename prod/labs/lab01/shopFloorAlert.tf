@@ -7,11 +7,11 @@ locals {
 ##SES##
 
 resource "aws_ses_email_identity" "source_alert_email" {
-  email = "chekyeaw@gmail.com"
+  email = "harris_ita03@hotmail.com"
 }
 
 resource "aws_ses_email_identity" "delivery_alert_email" {
-  email = "chekyeaw+ce8@gmail.com"
+  email = "harris_ita@yahoo.com.sg"
 }
 
 ## shopFloorAlert Lambda Execution Role ##
@@ -36,6 +36,7 @@ resource "aws_iam_policy" "shopFloorAlert_lambda_policy_lab1" {
           "dynamodb:GetRecords",
           "dynamodb:GetShardIterator",
           "dynamodb:ListStreams",
+          "kms:Decrypt"   // ✅ Xinwei added this
         ],
         "Resource" : "*"
       }
@@ -81,7 +82,7 @@ resource "aws_lambda_function" "send_alert_email" {
   role          = aws_iam_role.shopFloorAlert_lambda_role_lab1.arn
   runtime       = "nodejs16.x"
   filename      = "sendAlertEmail.zip"
-  handler       = "index.handler"
+  handler       = "index1.handler"    //✅ Xinwei updated index.handler to index1.handler
   timeout       = "15"
 
   source_code_hash = data.archive_file.lambdaalert.output_base64sha256
@@ -145,7 +146,3 @@ resource "aws_lambda_event_source_mapping" "trigger" {
  depends_on = [null_resource.delay]
  
 }
-
-
-
-
