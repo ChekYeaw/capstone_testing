@@ -41,6 +41,73 @@ This architecture implements a comprehensive factory monitoring system using AWS
    - Postman used for testing CRUD operations 
 (Node 2)
 
+## 🧪 Simulation & Testing Guide
+
+### 1. 📡 Simulate IoT Device Messages using Node-RED
+
+Use Node-RED to simulate the behavior of IoT devices publishing KPI data to AWS IoT Core.
+
+#### Steps:
+
+1. **Connect Node-RED to AWS IoT Core**
+   - Use the MQTT out node in Node-RED.
+   - Configure it to connect to:
+     - **Broker**: `Can be found in AWS IOT Domain Configuration on the left`
+     - **Port**: `8883`
+     - **TLS**: Enabled
+     - **Client Certificate & Key**: Use your AWS IoT certificates (download from IoT > Things > your device)
+
+2. **Set MQTT Topic**
+   ```
+   1001/+/ShopFloorData
+   ```
+
+3. **Format JSON Payload**
+   Use a function node or inject node with the following payload:
+   ```json
+   {
+     "Plant": "PlantA",
+     "Line": "line1",
+     "KpiName": "Temperature",
+     "KpiValue": 300,
+     "ThresholdValue": 75
+   }
+   ```
+
+4. **Deploy the flow** in Node-RED and publish messages to simulate real-time IoT data ingestion.
+
+---
+### 2. 📥 Verify Message Queue (SQS)
+
+- Navigate to **AWS Console > SQS > shop_floor_data_queue**
+- Confirm that messages are being received from Node-RED
+- Validate that the **Lambda `processShopFloorMsgs`** is triggered by checking logs in:
+  > **CloudWatch > Log groups > /aws/lambda/ProcessShopFloorMsgs**
+
+---
+
+### 3. 📬 Test Alerting with SES
+
+To simulate threshold violation and trigger alert email:
+
+1. **Manually insert an item into DynamoDB** table `shop_floor_alerts`:
+   ```json
+   {
+     "PK": "ALERT#1001#line1",
+     "SK": "Temperature",
+     "Value": 55
+   }
+   ```
+
+2. **Expected Behavior**:
+   - Lambda function `SendAlertEmail` is triggered via DynamoDB stream.
+   - An email is sent via **SES** to the configured address.
+   - Logs available at:
+     > **CloudWatch > Log groups > /aws/lambda/SendAlertEmail**
+
+   > ⚠️ SES Sandbox Note: Only verified emails can receive messages.
+
+
 ## GitHub Branching & Deployment Strategy
 
 This repository uses a streamlined strategy with two branches and two environment folders to manage feature development, testing, and production releases.
