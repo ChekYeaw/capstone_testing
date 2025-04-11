@@ -21,7 +21,8 @@ resource "aws_iam_policy" "shopFloorData_lambda_policy_lab2" {
         "Effect" : "Allow",
         "Action" : [
           "logs:*",
-          "dynamodb:*"
+          "dynamodb:*",
+          "kms:Decrypt"             # ✅ Xinwei Add this line
         ],
         "Resource" : "*"
       }
@@ -67,7 +68,7 @@ resource "aws_lambda_function" "shopFloorData_txnService" {
   role          = aws_iam_role.shopFloorData_lambda_role_lab2.arn
   runtime       = "nodejs16.x"
   filename      = "shopFloorData.zip"
-  handler       = "index.handler"
+  handler       = "index2.handler"                                         # ✅ Xinwei change index.handler to index2.handler
   timeout       = "15"
 
   source_code_hash = data.archive_file.lambdadata.output_base64sha256
@@ -271,4 +272,3 @@ resource "aws_api_gateway_stage" "stage-andon-api" {
     format          = "$context.requestId - $context.identity.sourceIp - $context.identity.userAgent - $context.requestTime - $context.status"
   }
 }
-
