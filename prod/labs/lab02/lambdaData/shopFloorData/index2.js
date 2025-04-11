@@ -1,6 +1,6 @@
 const aws = require('aws-sdk')
 const ddc = new aws.DynamoDB.DocumentClient()
-const tableName = 'shop_floor_alerts'
+const tableName = 'shop_floor_alerts-prod'
 
 exports.handler = async (event) => {
     console.log(event)
